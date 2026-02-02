@@ -1,0 +1,29 @@
+{
+	"name": "Ambiente PHP + Laravel (Sueca)",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+	// Extensões do VS Code úteis para PHP e Laravel
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"bmewburn.vscode-intelephense-client",
+				"onecentlin.laravel5-snippets",
+				"amiralizadeh9480.laravel-extra-intellisense"
+			]
+		}
+	},
+
+	// Encaminhar portas: 8080 (Apache/PHP vanilla), 8000 (Laravel), 3306 (MySQL)
+	"forwardPorts": [8080, 8000, 3306],
+
+	// Garantir que o user tem permissões
+	"remoteUser": "vscode",
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {}
+	},
+
+	// Configurar e iniciar Apache automaticamente ao iniciar o contentor
+	"postStartCommand": "sudo sed -i \"s|/var/www/html|/workspaces/${localWorkspaceFolderBasename}|g\" /etc/apache2/sites-available/000-default.conf && sudo service apache2 start"
+}

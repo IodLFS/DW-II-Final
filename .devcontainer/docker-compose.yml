@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+    # Mantém o contentor a correr
+    command: sleep infinity
+    # Rede interna para comunicar com a DB
+    networks:
+      - sueca-network
+    # Encaminha a porta 8000 (Laravel) e 8080 (Apache/PHP vanilla para TP1)
+    ports:
+      - "8000:8000"
+      - "8080:80"
+
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sueca_db
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - db-data:/var/lib/mysql
+      # TRUQUE: Executa automaticamente qualquer .sql na raiz do projeto ao iniciar a 1ª vez
+      - ../script.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sueca-network
+    ports:
+      - "3307:3306"
+
+volumes:
+  db-data:
+
+networks:
+  sueca-network:
+    driver: bridge
