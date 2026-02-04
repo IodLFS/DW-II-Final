@@ -115,9 +115,9 @@ class UserController extends Controller {
             $apiData = json_decode($response, true);
 
             if ($httpCode === 200 && isset($apiData['access_token'])) {
-                $_SESSION['user_id'] = $user->id;
-                $_SESSION['username'] = $user->username;
-                $_SESSION['email'] = $user->email;
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['email'] = $user['email'];
                 $_SESSION['jwt_token'] = $apiData['access_token'];
                 $_SESSION['authenticated'] = true;
                 
