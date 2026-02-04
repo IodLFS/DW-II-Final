@@ -12,7 +12,7 @@ class GameEngineController extends Controller
 
 public function startGame($id)
 {
-    $user = auth()->user();
+    $user = auth('sanctum')->user();
     $game = DB::table('games')->where('id', $id)->first();
     
     // [RF19/22] Validação rigorosa do dono e número de jogadores
@@ -67,7 +67,7 @@ public function startGame($id)
     // [RF25] Obter Estado (Polling)
     public function getGameState($id)
     {
-        $user = auth()->user();
+        $user = auth('sanctum')->user();
         $game = DB::table('games')->where('id', $id)->first();
         
         $myPlayer = DB::table('game_players')
@@ -103,7 +103,7 @@ public function startGame($id)
     // [RF23, RF24, RF27] Jogar Carta
     public function playCard(Request $request, $id)
     {
-        $user = auth()->user();
+        $user = auth('sanctum')->user();
         $cardPlayed = $request->input('card');
 
         // 1. Validar Estado

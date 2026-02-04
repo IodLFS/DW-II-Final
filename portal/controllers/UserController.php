@@ -194,7 +194,7 @@ class UserController extends Controller {
     }
 
     // [RF03] Endpoint AJAX para validar email em tempo real
-    public function check_email() {
+    public function checkEmail() {
         // Apenas aceita pedidos POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Ler o JSON enviado pelo JavaScript
@@ -217,15 +217,15 @@ class UserController extends Controller {
     }
 
     public function forgotPassword() {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $email = $_POST['email'];
-        // 1. Verificar se email existe
-        // 2. Gerar token de recuperação e guardar na BD com validade
-        // 3. Enviar email com link para definir nova password [cite: 19]
-        echo "Se o email existir, receberá um link de recuperação.";
-    } else {
-        $this->view('user/forgot_password');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $email = $_POST['email'];
+            // 1. Verificar se email existe
+            // 2. Gerar token de recuperação e guardar na BD com validade
+            // 3. Enviar email com link para definir nova password [cite: 19]
+            echo "Se o email existir, receberá um link de recuperação.";
+        } else {
+            $this->view('user/forgot_password');
+        }
     }
-}
 }
 ?>
