@@ -15,6 +15,45 @@
         .login-link { text-align: center; margin-top: 15px; font-size: 14px; }
     </style>
 </head>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const emailInput = document.querySelector('input[name="email"]');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    // Criar elemento para mensagem de erro
+    const msgSpan = document.createElement("span");
+    msgSpan.style.color = "red";
+    msgSpan.style.fontSize = "0.9em";
+    msgSpan.style.display = "block";
+    msgSpan.style.marginTop = "5px";
+    emailInput.parentNode.insertBefore(msgSpan, emailInput.nextSibling);
+
+    emailInput.addEventListener("blur", function() {
+        const email = this.value;
+        if(email.length < 5) return;
+
+        fetch('<?php echo BASE_URL; ?>/user/check_email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                msgSpan.innerText = "❌ Este email já está registado.";
+                emailInput.style.borderColor = "red";
+                submitBtn.disabled = true;
+            } else {
+                msgSpan.innerText = "✅ Email disponível.";
+                msgSpan.style.color = "green";
+                emailInput.style.borderColor = "green";
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(err => console.error(err));
+    });
+});
+</script>
 <body>
 
 <div class="card">

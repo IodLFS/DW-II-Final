@@ -66,5 +66,19 @@ class Game {
         }
         return false;
     }
+
+    // [RF13] Obter histórico de jogos terminados do utilizador
+    public function getHistory($userId) {
+        $sql = "SELECT g.*, 
+                (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as total_players
+                FROM games g
+                JOIN game_players gp ON g.id = gp.game_id
+                WHERE gp.user_id = :user_id 
+                AND g.status = 'finished'
+                ORDER BY g.updated_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll();
+    }
 }
 ?>

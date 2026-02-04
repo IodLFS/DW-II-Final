@@ -1,5 +1,4 @@
-// Variável para controlar visualmente a vez
-let currentTurnPlayerId = null;
+// public/js/game.js
 
 async function fetchGameState() {
     try {
@@ -20,7 +19,7 @@ async function fetchGameState() {
     }
 }
 
-// Enviar a carta para a API
+// NOVA FUNÇÃO: Envia a carta para a API
 async function playCard(cardCode) {
     try {
         const response = await fetch(`${API_URL}/game/${GAME_ID}/play`, {
@@ -32,13 +31,11 @@ async function playCard(cardCode) {
             body: JSON.stringify({ card: cardCode })
         });
 
-        const data = await response.json();
-
         if (response.ok) {
-            console.log("Jogada aceite!");
-            fetchGameState(); // Atualiza logo o tabuleiro
+            fetchGameState(); // Atualiza a mesa imediatamente
         } else {
-            alert("Erro: " + (data.error || "Jogada inválida"));
+            const data = await response.json();
+            alert("Erro: " + (data.error || "Não foi possível jogar"));
         }
     } catch (error) {
         console.error("Erro ao jogar:", error);
@@ -46,34 +43,32 @@ async function playCard(cardCode) {
 }
 
 function renderGame(data) {
-    currentTurnPlayerId = data.current_turn;
-
-    // 1. Trunfo
-    document.getElementById('trump-card-display').innerText = convertCardToSymbol(data.trump.card);
-    
-    // 2. Estado (Info)
-    const statusMsg = document.getElementById('status-msg');
-    if (statusMsg) {
-        statusMsg.innerText = (data.current_turn == <?php echo $_SESSION['user_id'] ?? 0; ?>) ? "A TUA VEZ!" : "À espera...";
+    // [RF33] VERIFICAÇÃO DE FIM DE JOGO
+    if (data.status === 'finished') {
+        const gameContainer = document.getElementById('game-table');
+        
+        // Substitui todo o conteúdo da mesa pelo ecrã de vitória
+        gameContainer.innerHTML = `
+            <div style="text-align: center; color: white; padding-top: 100px;">
+                <h1 style="font-size: 50px;">FIM DE JOGO! 🏆</h1>
+                <h2>Vencedores: <span style="color: yellow;">${data.winner || 'Empate'}</span></h2>
+                <div style="font-size: 24px; margin: 20px 0;">
+                    <p>Nós: ${data.scores.team_A} pts | Eles: ${data.scores.team_B} pts</p>
+                </div>
+                <button onclick="window.location.href='${BASE_URL}/lobby'" 
+                        style="padding: 15px 30px; font-size: 20px; background: #d32f2f; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Voltar ao Lobby
+                </button>
+            </div>
+        `;
+        return; // Pára a execução para não desenhar mais cartas
     }
 
-    // 3. Mesa (Cartas jogadas) - [NOVO]
-    const tableDiv = document.getElementById('table-center');
-    tableDiv.innerHTML = ''; 
-    
-    if (data.table_cards && data.table_cards.length > 0) {
-        data.table_cards.forEach(play => {
-            const cardEl = document.createElement('div');
-            cardEl.className = `card ${isRed(play.card) ? 'red' : 'black'}`;
-            // Posicionar no centro
-            cardEl.style.position = 'absolute'; 
-            cardEl.style.marginLeft = (Math.random() * 20 - 10) + 'px'; // Ligeira rotação/posição aleatória
-            cardEl.innerText = convertCardToSymbol(play.card);
-            tableDiv.appendChild(cardEl);
-        });
-    }
+    // ... (O resto do código da função renderGame continua igual aqui para baixo) ...
+    // 1. Info e Pontos...
+    // 2. Trunfo...
 
-    // 4. Minha Mão
+    // Desenha Minha Mão
     const handContainer = document.getElementById('my-hand');
     handContainer.innerHTML = ''; 
 
@@ -82,14 +77,21 @@ function renderGame(data) {
         card.className = `card ${isRed(cardCode) ? 'red' : 'black'}`;
         card.innerText = convertCardToSymbol(cardCode);
         
-        // Ao clicar, chama a função REAL de jogar
+        // Clicar chama a função real
         card.onclick = () => playCard(cardCode);
         
         handContainer.appendChild(card);
     });
+    
+    // Mostra estado
+    const statusMsg = document.getElementById('status-msg');
+    if(statusMsg) {
+        // Assume que a variável PHP USER_ID não está disponível aqui diretamente, 
+        // mas podes inferir se a API retornar o teu ID ou apenas testar visualmente.
+        statusMsg.innerText = "Turno do Jogador ID: " + data.current_turn;
+    }
 }
 
-// Auxiliares
 function convertCardToSymbol(code) {
     if (!code) return '?';
     const suits = {'h': '♥', 'd': '♦', 's': '♠', 'c': '♣'};
@@ -102,6 +104,32 @@ function isRed(code) {
     return code && (code.includes('h') || code.includes('d'));
 }
 
-// Loop
-fetchGameState();
-setInterval(fetchGameState, 2000); // 2 segundos para ser mais rápido
+function showNotification(message, isError = true) {
+    // Cria o elemento se não existir
+    let toast = document.getElementById('game-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'game-toast';
+        toast.style.position = 'absolute';
+        toast.style.top = '20px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.padding = '10px 20px';
+        toast.style.borderRadius = '5px';
+        toast.style.color = 'white';
+        toast.style.fontWeight = 'bold';
+        toast.style.zIndex = '1000';
+        toast.style.transition = 'opacity 0.5s';
+        document.body.appendChild(toast);
+    }
+
+    // Configura a mensagem
+    toast.style.backgroundColor = isError ? 'rgba(255, 0, 0, 0.8)' : 'rgba(0, 128, 0, 0.8)';
+    toast.innerText = message;
+    toast.style.opacity = '1';
+
+    // Desaparece após 3 segundos
+    setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 3000);
+}

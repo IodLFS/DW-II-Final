@@ -21,6 +21,18 @@
         .status-badge { background-color: #e2e6ea; padding: 4px 8px; border-radius: 12px; font-size: 0.85em; }
         .btn-join { text-decoration: none; color: white; background-color: #007bff; padding: 5px 10px; border-radius: 4px; font-size: 0.9em; }
     </style>
+    <header>
+        <div>
+            <h1>Sueca Online ♣️</h1>
+            <small>Bem-vindo, <strong><?php echo $user_name; ?></strong></small>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="<?php echo BASE_URL; ?>/user/profile" class="btn-join" style="background:#6c757d;">Meu Perfil</a>
+            <a href="<?php echo BASE_URL; ?>/user/history" class="btn-join" style="background:#17a2b8;">Histórico</a>
+            
+            <a href="<?php echo BASE_URL; ?>/user/logout" class="btn-logout">Sair</a>
+        </div>
+    </header>
 </head>
 <body>
 

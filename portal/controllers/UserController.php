@@ -93,5 +93,69 @@ class UserController extends Controller {
         header('Location: ' . BASE_URL . '/user/login');
         exit;
     }
+
+    // [RF10, RF11] Página de Editar Perfil
+    public function profile() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . '/user/login');
+            exit;
+        }
+
+        $userModel = new User();
+        $userId = $_SESSION['user_id'];
+        $message = "";
+
+        // Processar Formulário
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $name = $_POST['name'];
+            $bio = $_POST['bio'];
+            
+            // 1. Atualizar Texto
+            $userModel->updateProfile($userId, $name, $bio);
+            $message = "Perfil atualizado com sucesso!";
+            $_SESSION['user_name'] = $name; // Atualizar sessão
+
+            // 2. Upload de Imagem [RF11]
+            if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
+                $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+                $filename = $_FILES['avatar']['name'];
+                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+                if (in_array($ext, $allowed)) {
+                    // Nome único para evitar conflitos
+                    $newName = "user_" . $userId . "_" . time() . "." . $ext;
+                    $dest = "../public/uploads/" . $newName;
+
+                    // Criar pasta se não existir
+                    if (!is_dir("../public/uploads")) mkdir("../public/uploads", 0777, true);
+
+                    if (move_uploaded_file($_FILES['avatar']['tmp_name'], $dest)) {
+                        $userModel->updateAvatar($userId, $newName);
+                        $message .= " Avatar carregado.";
+                    }
+                } else {
+                    $message .= " Erro: Apenas imagens JPG, PNG ou GIF.";
+                }
+            }
+        }
+
+        $user = $userModel->findById($userId);
+        $this->view('user/profile', ['user' => $user, 'message' => $message]);
+    }
+
+    // [RF03] Endpoint AJAX para verificar email
+    public function check_email() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"));
+            $email = $data->email ?? '';
+
+            $userModel = new User();
+            $exists = $userModel->emailExists($email);
+
+            header('Content-Type: application/json');
+            echo json_encode(['exists' => $exists]);
+            exit;
+        }
+    }
 }
 ?>
