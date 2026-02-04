@@ -8,67 +8,61 @@ use App\Http\Controllers\Controller;
 
 class GameEngineController extends Controller
 {
-    public function startGame($id)
-    {
-        $user = auth()->user();
-        
-        $game = DB::table('games')->where('id', $id)->first();
-        
-        // Validação de dono da sala
-        if (!$game || $game->creator_id != $user->id) {
-            return response()->json(['error' => 'Apenas o dono pode iniciar'], 403);
-        }
-        
-        $players = DB::table('game_players')->where('game_id', $id)->orderBy('seat_index')->get();
+    // GameEngineController.php
 
-        // [RF22] O sistema deve validar se estão exatamente 4 jogadores 
-        if ($players->count() !== 4) {
-            return response()->json(['error' => 'A sala precisa de exatamente 4 jogadores para iniciar!'], 400);
-        }
-
-        // [RF23] Criar e Baralhar Baralho
-        $suits = ['h', 's', 'd', 'c']; 
-        $ranks = ['2', '3', '4', '5', '6', 'Q', 'J', 'K', '7', 'A'];
-        $deck = [];
-        
-        foreach ($suits as $suit) {
-            foreach ($ranks as $rank) {
-                $deck[] = $rank . $suit;
-            }
-        }
-        
-        shuffle($deck); 
-
-        // Distribuir 10 cartas
-        $hands = array_chunk($deck, 10);
-        
-        // Definir Trunfo (Aleatório ou primeira carta do primeiro jogador)
-        $trumpCard = $hands[0][0]; 
-        $trumpSuit = substr($trumpCard, -1);
-
-        foreach ($players as $index => $player) {
-            DB::table('game_players')
-                ->where('id', $player->id)
-                ->update(['cards_hand' => json_encode($hands[$index])]);
-        }
-
-        // [RF22] Escolher aleatoriamente quem começa 
-        // O código anterior usava sempre o $players[0], agora usamos random()
-        $randomStartPlayer = $players->random();
-
-        DB::table('games')->where('id', $id)->update([
-            'status' => 'started',
-            'trump_card' => $trumpCard,
-            'trump_suit' => $trumpSuit,
-            'current_player_id' => $randomStartPlayer->user_id, // <--- Aleatório
-            'board_state' => json_encode([]),
-            'score_team_a' => 0,
-            'score_team_b' => 0,
-            'winner_team' => null
-        ]);
-
-        return response()->json(['message' => 'Jogo iniciado!']);
+public function startGame($id)
+{
+    $user = auth()->user();
+    $game = DB::table('games')->where('id', $id)->first();
+    
+    // [RF19/22] Validação rigorosa do dono e número de jogadores
+    if (!$game || $game->creator_id != $user->id) {
+        return response()->json(['error' => 'Apenas o dono pode iniciar'], 403);
     }
+    
+    $players = DB::table('game_players')->where('game_id', $id)->orderBy('seat_index')->get();
+
+    if ($players->count() !== 4) {
+        return response()->json(['error' => 'A sala precisa de exatamente 4 jogadores para iniciar!'], 400);
+    }
+
+    // [RF23] Criação do baralho de 40 cartas
+    $suits = ['h', 's', 'd', 'c']; 
+    $ranks = ['2', '3', '4', '5', '6', 'Q', 'J', 'K', '7', 'A'];
+    $deck = [];
+    foreach ($suits as $suit) {
+        foreach ($ranks as $rank) { $deck[] = $rank . $suit; }
+    }
+    
+    shuffle($deck); 
+
+    // Correção: O trunfo é a última carta do baralho (índice 39)
+    $trumpCard = $deck[39]; 
+    $trumpSuit = substr($trumpCard, -1); 
+    // Distribuir 10 cartas para cada (o 4º jogador fica com a carta do trunfo)
+    $hands = array_chunk($deck, 10);
+    
+    foreach ($players as $index => $player) {
+        DB::table('game_players')
+            ->where('id', $player->id)
+            ->update(['cards_hand' => json_encode($hands[$index])]);
+    }
+
+    // [RF22] Escolher aleatoriamente quem começa
+    $randomStartPlayer = $players->random(); 
+
+    DB::table('games')->where('id', $id)->update([
+        'status' => 'started',
+        'trump_card' => $trumpCard,
+        'trump_suit' => $trumpSuit,
+        'current_player_id' => $randomStartPlayer->user_id,
+        'board_state' => json_encode([]),
+        'score_team_a' => 0,
+        'score_team_b' => 0
+    ]);
+
+    return response()->json(['message' => 'Jogo iniciado!']);
+}
 
     // [RF25] Obter Estado (Polling)
     public function getGameState($id)

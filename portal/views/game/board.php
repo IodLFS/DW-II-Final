@@ -20,7 +20,13 @@
         #trump-indicator { position: absolute; top: 20px; right: 20px; background: white; padding: 10px; border-radius: 5px; text-align: center; }
     </style>
 </head>
-
+<script>
+    const API_URL = "<?php echo API_BASE_URL; ?>";
+    const GAME_ID = "<?php echo $gameId; ?>";
+    const USER_TOKEN = "<?php echo $_SESSION['jwt_token']; ?>";
+    const BASE_URL = "<?php echo BASE_URL; ?>";
+</script>
+<script src="<?php echo BASE_URL; ?>/js/game.js"></script>
 <body>
 
 <div id="game-table">
@@ -40,15 +46,6 @@
     <div id="my-hand">
         </div>
 </div>
-
-<script>
-    const API_URL = "<?php echo API_BASE_URL; ?>"; // Ajusta conforme o teu config
-    const GAME_ID = <?php echo $game_id; ?>;
-    const USER_TOKEN = "<?php echo $_SESSION['jwt_token']; ?>";
-    const BASE_URL = "<?php echo BASE_URL; ?>";
-    // ADICIONA ISTO:
-    const MY_USER_ID = <?php echo $_SESSION['user_id']; ?>; 
-</script>
 
 <script src="<?php echo BASE_URL; ?>/js/game.js"></script>
 
