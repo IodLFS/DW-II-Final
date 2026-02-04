@@ -1,14 +1,20 @@
 <?php
 class Controller {
-    public function view($viewName, $data = []) {
-        extract($data);
+    protected $lang;
 
-        $filename = "../views/" . $viewName . ".php";
-        if (file_exists($filename)) {
-            require_once $filename;
-        } else {
-            die("View '$viewName' não encontrada!");
-        }
+    public function __construct() {
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
+        // Define idioma padrão ou o escolhido pelo utilizador
+        $langCode = $_SESSION['lang'] ?? 'pt';
+        
+        // Carrega o ficheiro correspondente
+        $this->lang = include "../lang/{$langCode}.php";
+    }
+
+    protected function view($view, $data = []) {
+        // Passa as traduções automaticamente para a vista
+        $data['texts'] = $this->lang;
+        require_once "../views/{$view}.php";
     }
 }
-?>

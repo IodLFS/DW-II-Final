@@ -4,4 +4,5 @@ class HomeController extends Controller {
         $this->view('home', ['titulo' => 'Bem-vindo à Sueca Online']);
     }
 }
+
 ?>

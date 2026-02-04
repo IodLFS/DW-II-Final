@@ -42,6 +42,12 @@
         <button type="submit">Guardar Alterações</button>
     </form>
 
+    <div class="stats-section">
+    <h3>Estatísticas de Jogo (Brevemente)</h3>
+    <p>Jogos Jogados: -</p>
+    <p>Vitórias/Derrotas: - / -</p>
+</div>
+
     <a href="<?php echo BASE_URL; ?>/lobby" class="back-link">← Voltar ao Lobby</a>
 </div>
 

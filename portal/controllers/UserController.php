@@ -1,5 +1,7 @@
 <?php
 require_once '../models/User.php';
+$lang = $_SESSION['lang'] ?? 'pt';
+$texts = include "../lang/$lang.php";
 
 class UserController extends Controller {
 
@@ -8,36 +10,60 @@ class UserController extends Controller {
     }
 
     public function store() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            
-            $data = [
-                'name'     => trim($_POST['name']),
-                'username' => trim($_POST['username']),
-                'email'    => trim($_POST['email']),
-                'password' => $_POST['password']
-            ];
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        
+        // 1. Recolha e limpeza de dados
+        $data = [
+            'name'     => trim($_POST['name']),
+            'username' => trim($_POST['username']),
+            'email'    => trim($_POST['email']),
+            'password' => $_POST['password'] // Ainda em texto limpo para validação
+        ];
+        if (empty($data['name']) || empty($data['username']) || empty($data['email']) || empty($data['password'])) {
+            $_SESSION['error'] = $this->lang['error_fill_all']; // Usa tradução 
+            header('Location: ' . BASE_URL . '/user/register');
+            exit;
+        }
 
-            if (empty($data['name']) || empty($data['username']) || empty($data['email']) || empty($data['password'])) {
-                die("Por favor preencha todos os campos."); 
-            }
+        // 2. Validação de campos vazios
+        if (empty($data['name']) || empty($data['username']) || empty($data['email']) || empty($data['password'])) {
+            $_SESSION['error'] = "Por favor preencha todos os campos.";
+            header('Location: ' . BASE_URL . '/user/register');
+            exit;
+        }
 
-            $userModel = new User();
+        $userModel = new User();
 
-            if ($userModel->emailExists($data['email'])) {
-                die("Erro: Este email já está registado.");
-            }
-            if ($userModel->usernameExists($data['username'])) {
-                die("Erro: Este nome de utilizador já existe.");
-            }
-
-            if ($userModel->create($data)) {
-                echo "Conta criada com sucesso! <a href='" . BASE_URL . "/user/login'>Fazer Login</a>";
-            } else {
-                die("Erro ao criar conta.");
-            }
+        // 3. Verificação de duplicados (RF04)
+        if ($userModel->emailExists($data['email'])) {
+            $_SESSION['error'] = "Erro: Este email já está registado.";
+            header('Location: ' . BASE_URL . '/user/register');
+            exit;
+        }
+        if ($userModel->usernameExists($data['username'])) {
+            $_SESSION['error'] = "Erro: Este nome de utilizador já existe.";
+            header('Location: ' . BASE_URL . '/user/register');
+            exit;
         }
         
+        if ($userModel->emailExists($data['email'])) {
+            $_SESSION['error'] = $this->lang['email_exists']; // Usa tradução 
+            header('Location: ' . BASE_URL . '/user/register');
+            exit;
+        }
+
+        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+
+        if ($userModel->create($data)) {
+            $_SESSION['success'] = $this->lang['register_success']; // Usa tradução 
+            header('Location: ' . BASE_URL . '/user/login');
+            exit;
+        }
+    } else {
+        header('Location: ' . BASE_URL . '/user/register');
+        exit;
     }
+}
 
     public function login() {
         $this->view('user/login');
@@ -73,14 +99,17 @@ class UserController extends Controller {
 
                 $apiData = json_decode($response, true);
 
+                // Após o curl_exec($ch) 
                 if ($httpCode == 200 && isset($apiData['access_token'])) {
                     $_SESSION['jwt_token'] = $apiData['access_token'];
+                    header('Location: ' . BASE_URL . '/lobby');
+                    exit;
                 } else {
-                    $_SESSION['api_error'] = "Aviso: Não foi possível conectar ao motor de jogo.";
+                    // Se a API falhar, impede a entrada no lobby
+                    $_SESSION['error'] = "Erro de autenticação no motor de jogo. Tente mais tarde.";
+                    header('Location: ' . BASE_URL . '/user/login');
+                    exit;
                 }
-                
-                header('Location: ' . BASE_URL . '/lobby');
-                exit;
 
             } else {
                 echo "Email ou password incorretos. <a href='" . BASE_URL . "/user/login'>Tentar novamente</a>";
@@ -89,10 +118,18 @@ class UserController extends Controller {
     }
 
     public function logout() {
-        session_destroy(); 
-        header('Location: ' . BASE_URL . '/user/login');
-        exit;
+    $_SESSION = array(); // Limpa todas as variáveis de sessão
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
     }
+    session_destroy(); 
+    header('Location: ' . BASE_URL . '/user/login');
+    exit;
+}
 
     // [RF10, RF11] Página de Editar Perfil
     public function profile() {
@@ -165,5 +202,17 @@ class UserController extends Controller {
         header('Location: ' . BASE_URL . '/user/register');
         exit;
     }
+
+    public function forgotPassword() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $email = $_POST['email'];
+        // 1. Verificar se email existe
+        // 2. Gerar token de recuperação e guardar na BD com validade
+        // 3. Enviar email com link para definir nova password [cite: 19]
+        echo "Se o email existir, receberá um link de recuperação.";
+    } else {
+        $this->view('user/forgot_password');
+    }
+}
 }
 ?>
