@@ -22,10 +22,15 @@ class GameEngineController extends Controller
         }
         
         
+        // ... código anterior ...
         $players = DB::table('game_players')->where('game_id', $id)->orderBy('seat_index')->get();
-        if ($players->count() < 4) {
-            return response()->json(['error' => 'Precisas de 4 jogadores'], 400);
+        
+        // ALTERADO: Mudámos de 4 para 1 apenas para testes. 
+        // Quando o jogo estiver pronto, volta a colocar 4.
+        if ($players->count() < 1) { 
+            return response()->json(['error' => 'Precisas de jogadores suficientes'], 400);
         }
+        // ... resto do código ...
 
         
         $suits = ['h', 's', 'd', 'c']; 
@@ -93,5 +98,62 @@ class GameEngineController extends Controller
             'current_turn' => $game->current_player_id,
             'players' => $opponents
         ]);
+    }
+
+    // [RF27] Jogar uma carta
+    public function playCard(Request $request, $id)
+    {
+        $user = auth()->user();
+        $cardPlayed = $request->input('card'); // Ex: '7h'
+
+        // 1. Validar Jogo e Turno
+        $game = DB::table('games')->where('id', $id)->first();
+        if ($game->status !== 'started') {
+            return response()->json(['error' => 'O jogo não está a decorrer'], 400);
+        }
+        if ($game->current_player_id != $user->id) {
+            return response()->json(['error' => 'Não é a tua vez!'], 403);
+        }
+
+        // 2. Verificar se o jogador tem a carta
+        $player = DB::table('game_players')->where('game_id', $id)->where('user_id', $user->id)->first();
+        $hand = json_decode($player->cards_hand);
+        
+        if (!in_array($cardPlayed, $hand)) {
+            return response()->json(['error' => 'Não tens essa carta!'], 400);
+        }
+
+        // 3. Remover carta da mão e atualizar BD
+        $newHand = array_values(array_diff($hand, [$cardPlayed])); 
+        DB::table('game_players')
+            ->where('id', $player->id)
+            ->update(['cards_hand' => json_encode($newHand)]);
+
+        // 4. Adicionar à mesa
+        $board = json_decode($game->board_state, true) ?? [];
+        $board[] = [
+            'card' => $cardPlayed,
+            'player_id' => $user->id,
+            'username' => $user->username // Guardamos o nome para mostrar na mesa
+        ];
+
+        // 5. Passar a vez (Próximo jogador sentado à esquerda)
+        // Nota: Como estamos a testar com 1 jogador, a vez volta para ti (seat % 1).
+        // Com 4 jogadores, seria ($seat + 1) % 4.
+        $totalPlayers = DB::table('game_players')->where('game_id', $id)->count();
+        $nextSeat = ($player->seat_index + 1) % $totalPlayers; 
+        
+        $nextPlayer = DB::table('game_players')
+                        ->where('game_id', $id)
+                        ->where('seat_index', $nextSeat)
+                        ->first();
+
+        // 6. Gravar estado
+        DB::table('games')->where('id', $id)->update([
+            'board_state' => json_encode($board),
+            'current_player_id' => $nextPlayer->user_id
+        ]);
+
+        return response()->json(['message' => 'Jogada feita', 'board' => $board]);
     }
 }

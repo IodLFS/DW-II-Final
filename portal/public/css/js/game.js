@@ -1,4 +1,5 @@
-// public/js/game.js
+// Variável para controlar visualmente a vez
+let currentTurnPlayerId = null;
 
 async function fetchGameState() {
     try {
@@ -13,17 +14,66 @@ async function fetchGameState() {
         if (response.ok) {
             const data = await response.json();
             renderGame(data);
-        } else {
-            console.error("Erro ao obter estado do jogo");
         }
     } catch (error) {
         console.error("Erro de rede:", error);
     }
 }
 
-function renderGame(data) {
-    document.getElementById('trump-card-display').innerText = data.trump.card;
+// Enviar a carta para a API
+async function playCard(cardCode) {
+    try {
+        const response = await fetch(`${API_URL}/game/${GAME_ID}/play`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${USER_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ card: cardCode })
+        });
 
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log("Jogada aceite!");
+            fetchGameState(); // Atualiza logo o tabuleiro
+        } else {
+            alert("Erro: " + (data.error || "Jogada inválida"));
+        }
+    } catch (error) {
+        console.error("Erro ao jogar:", error);
+    }
+}
+
+function renderGame(data) {
+    currentTurnPlayerId = data.current_turn;
+
+    // 1. Trunfo
+    document.getElementById('trump-card-display').innerText = convertCardToSymbol(data.trump.card);
+    
+    // 2. Estado (Info)
+    const statusMsg = document.getElementById('status-msg');
+    if (statusMsg) {
+        statusMsg.innerText = (data.current_turn == <?php echo $_SESSION['user_id'] ?? 0; ?>) ? "A TUA VEZ!" : "À espera...";
+    }
+
+    // 3. Mesa (Cartas jogadas) - [NOVO]
+    const tableDiv = document.getElementById('table-center');
+    tableDiv.innerHTML = ''; 
+    
+    if (data.table_cards && data.table_cards.length > 0) {
+        data.table_cards.forEach(play => {
+            const cardEl = document.createElement('div');
+            cardEl.className = `card ${isRed(play.card) ? 'red' : 'black'}`;
+            // Posicionar no centro
+            cardEl.style.position = 'absolute'; 
+            cardEl.style.marginLeft = (Math.random() * 20 - 10) + 'px'; // Ligeira rotação/posição aleatória
+            cardEl.innerText = convertCardToSymbol(play.card);
+            tableDiv.appendChild(cardEl);
+        });
+    }
+
+    // 4. Minha Mão
     const handContainer = document.getElementById('my-hand');
     handContainer.innerHTML = ''; 
 
@@ -32,27 +82,26 @@ function renderGame(data) {
         card.className = `card ${isRed(cardCode) ? 'red' : 'black'}`;
         card.innerText = convertCardToSymbol(cardCode);
         
-        // Clique para jogar (Futuro)
+        // Ao clicar, chama a função REAL de jogar
         card.onclick = () => playCard(cardCode);
         
         handContainer.appendChild(card);
     });
 }
 
+// Auxiliares
 function convertCardToSymbol(code) {
+    if (!code) return '?';
     const suits = {'h': '♥', 'd': '♦', 's': '♠', 'c': '♣'};
     const rank = code.slice(0, -1);
     const suit = code.slice(-1);
-    return `${rank} ${suits[suit]}`;
+    return `${rank} ${suits[suit] || suit}`;
 }
 
 function isRed(code) {
-    return code.includes('h') || code.includes('d');
+    return code && (code.includes('h') || code.includes('d'));
 }
 
-function playCard(card) {
-    alert(`Tentaste jogar: ${card}. (Lógica de jogada a implementar no próximo passo)`);
-}
-
+// Loop
 fetchGameState();
-setInterval(fetchGameState, 3000); 
+setInterval(fetchGameState, 2000); // 2 segundos para ser mais rápido
