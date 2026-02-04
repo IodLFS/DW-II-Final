@@ -143,19 +143,27 @@ class UserController extends Controller {
         $this->view('user/profile', ['user' => $user, 'message' => $message]);
     }
 
-    // [RF03] Endpoint AJAX para verificar email
+    // [RF03] Endpoint AJAX para validar email em tempo real
     public function check_email() {
+        // Apenas aceita pedidos POST
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Ler o JSON enviado pelo JavaScript
             $data = json_decode(file_get_contents("php://input"));
             $email = $data->email ?? '';
 
+            // Verificar na BD
             $userModel = new User();
             $exists = $userModel->emailExists($email);
 
+            // Retornar JSON
             header('Content-Type: application/json');
             echo json_encode(['exists' => $exists]);
             exit;
         }
+        
+        // Se tentarem aceder diretamente via GET, redireciona
+        header('Location: ' . BASE_URL . '/user/register');
+        exit;
     }
 }
 ?>

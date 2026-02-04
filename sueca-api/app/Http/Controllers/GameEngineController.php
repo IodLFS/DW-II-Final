@@ -8,54 +8,59 @@ use App\Http\Controllers\Controller;
 
 class GameEngineController extends Controller
 {
-    // [RF22] Iniciar Jogo
     public function startGame($id)
     {
         $user = auth()->user();
+        
         $game = DB::table('games')->where('id', $id)->first();
-
+        
+        // Validação de dono da sala
         if (!$game || $game->creator_id != $user->id) {
             return response()->json(['error' => 'Apenas o dono pode iniciar'], 403);
         }
-
+        
         $players = DB::table('game_players')->where('game_id', $id)->orderBy('seat_index')->get();
 
-        // NOTA: < 4 para testar sozinho. Para produção, muda para < 4.
-        if ($players->count() < 4) { 
-            return response()->json(['error' => 'A sala precisa de 4 jogadores para começar!'], 400);
+        // [RF22] O sistema deve validar se estão exatamente 4 jogadores 
+        if ($players->count() !== 4) {
+            return response()->json(['error' => 'A sala precisa de exatamente 4 jogadores para iniciar!'], 400);
         }
 
-        // Criar Baralho
-        $suits = ['h', 's', 'd', 'c']; // Copas, Espadas, Ouros, Paus
+        // [RF23] Criar e Baralhar Baralho
+        $suits = ['h', 's', 'd', 'c']; 
         $ranks = ['2', '3', '4', '5', '6', 'Q', 'J', 'K', '7', 'A'];
         $deck = [];
-
+        
         foreach ($suits as $suit) {
             foreach ($ranks as $rank) {
                 $deck[] = $rank . $suit;
             }
         }
+        
+        shuffle($deck); 
 
-        shuffle($deck);
+        // Distribuir 10 cartas
         $hands = array_chunk($deck, 10);
-        $trumpCard = $hands[0][0];
+        
+        // Definir Trunfo (Aleatório ou primeira carta do primeiro jogador)
+        $trumpCard = $hands[0][0]; 
         $trumpSuit = substr($trumpCard, -1);
 
-        // Distribuir Cartas
         foreach ($players as $index => $player) {
-            if (isset($hands[$index])) {
-                DB::table('game_players')
-                    ->where('id', $player->id)
-                    ->update(['cards_hand' => json_encode($hands[$index])]);
-            }
+            DB::table('game_players')
+                ->where('id', $player->id)
+                ->update(['cards_hand' => json_encode($hands[$index])]);
         }
 
-        // Reset ao Estado do Jogo
+        // [RF22] Escolher aleatoriamente quem começa 
+        // O código anterior usava sempre o $players[0], agora usamos random()
+        $randomStartPlayer = $players->random();
+
         DB::table('games')->where('id', $id)->update([
             'status' => 'started',
             'trump_card' => $trumpCard,
             'trump_suit' => $trumpSuit,
-            'current_player_id' => $players[0]->user_id,
+            'current_player_id' => $randomStartPlayer->user_id, // <--- Aleatório
             'board_state' => json_encode([]),
             'score_team_a' => 0,
             'score_team_b' => 0,
@@ -163,7 +168,7 @@ class GameEngineController extends Controller
         // (Nota: Usa '>= 4' para jogo real. Para testes a solo, usa o total de jogadores na sala)
         $totalPlayers = DB::table('game_players')->where('game_id', $id)->count();
         $cardsPerTrick = ($totalPlayers < 4) ? $totalPlayers : 4; 
-        $cardsPerTrick = 4;
+        $cardsPerTrick = 4; // Forçar 4 para teste, mesmo com menos jogadores
         $trickWinnerId = null;
         $points = 0;
         $gameFinished = false;

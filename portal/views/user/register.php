@@ -18,20 +18,34 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const emailInput = document.querySelector('input[name="email"]');
-    const submitBtn = document.querySelector('button[type="submit"]');
+    const submitBtn = document.querySelector('button[type="submit"]'); // O botão de registar
     
-    // Criar elemento para mensagem de erro
+    // 1. Criar o elemento para a mensagem de erro/sucesso
     const msgSpan = document.createElement("span");
-    msgSpan.style.color = "red";
+    msgSpan.style.fontWeight = "bold";
     msgSpan.style.fontSize = "0.9em";
     msgSpan.style.display = "block";
     msgSpan.style.marginTop = "5px";
+    
+    // Insere o span logo a seguir ao input do email
     emailInput.parentNode.insertBefore(msgSpan, emailInput.nextSibling);
 
+    // 2. Adicionar o evento 'blur' (quando sai do campo)
     emailInput.addEventListener("blur", function() {
         const email = this.value;
-        if(email.length < 5) return;
 
+        // Se estiver vazio ou for muito curto, não faz nada
+        if(email.length < 5 || !email.includes('@')) {
+            msgSpan.innerText = "";
+            emailInput.style.borderColor = "#ddd";
+            return;
+        }
+
+        // Feedback visual de "a carregar..."
+        msgSpan.innerText = "🔄 A verificar...";
+        msgSpan.style.color = "#666";
+
+        // 3. Fazer o pedido AJAX (Fetch API) [RNF07]
         fetch('<?php echo BASE_URL; ?>/user/check_email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -40,17 +54,30 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(response => response.json())
         .then(data => {
             if (data.exists) {
-                msgSpan.innerText = "❌ Este email já está registado.";
+                // EMAIL JÁ EXISTE
+                msgSpan.innerText = "❌ Este email já está registado!";
+                msgSpan.style.color = "red";
                 emailInput.style.borderColor = "red";
-                submitBtn.disabled = true;
+                submitBtn.disabled = true; // Bloqueia o registo
             } else {
+                // EMAIL DISPONÍVEL
                 msgSpan.innerText = "✅ Email disponível.";
                 msgSpan.style.color = "green";
                 emailInput.style.borderColor = "green";
-                submitBtn.disabled = false;
+                submitBtn.disabled = false; // Desbloqueia
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            console.error("Erro na verificação:", err);
+            msgSpan.innerText = "";
+        });
+    });
+    
+    // Limpar erro quando o utilizador começa a escrever de novo
+    emailInput.addEventListener("input", function() {
+        submitBtn.disabled = false;
+        msgSpan.innerText = "";
+        emailInput.style.borderColor = "#ddd";
     });
 });
 </script>

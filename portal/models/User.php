@@ -8,12 +8,6 @@ class User {
         $this->db = Database::connect();
     }
 
-    public function emailExists($email) {
-        $stmt = $this->db->prepare("SELECT id FROM users WHERE email = :email");
-        $stmt->execute(['email' => $email]);
-        return $stmt->rowCount() > 0;
-    }
-
     public function usernameExists($username) {
         $stmt = $this->db->prepare("SELECT id FROM users WHERE username = :username");
         $stmt->execute(['username' => $username]);
@@ -70,6 +64,14 @@ class User {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE id = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetch();
+    }
+
+    // [RF03] Verificar se o email já existe (para AJAX)
+    public function emailExists($email) {
+        // Usamos SELECT id para ser mais rápido (não precisamos dos dados todos)
+        $stmt = $this->db->prepare("SELECT id FROM users WHERE email = :email");
+        $stmt->execute(['email' => $email]);
+        return $stmt->rowCount() > 0;
     }
 }
 ?>
