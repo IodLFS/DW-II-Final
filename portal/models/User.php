@@ -45,30 +45,29 @@ class User {
         return false; 
     }
 
-    // [RF10] Atualizar dados de texto
     public function updateProfile($id, $name, $bio) {
         $sql = "UPDATE users SET name = :name, bio = :bio WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute(['name' => $name, 'bio' => $bio, 'id' => $id]);
     }
 
-    // [RF11] Atualizar Avatar
+
     public function updateAvatar($id, $avatarPath) {
         $sql = "UPDATE users SET avatar = :avatar WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute(['avatar' => $avatarPath, 'id' => $id]);
     }
 
-    // Buscar utilizador por ID
+
     public function findById($id) {
         $stmt = $this->db->prepare("SELECT * FROM users WHERE id = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetch();
     }
 
-    // [RF03] Verificar se o email já existe (para AJAX)
+
     public function emailExists($email) {
-        // Usamos SELECT id para ser mais rápido (não precisamos dos dados todos)
+
         $stmt = $this->db->prepare("SELECT id FROM users WHERE email = :email");
         $stmt->execute(['email' => $email]);
         return $stmt->rowCount() > 0;

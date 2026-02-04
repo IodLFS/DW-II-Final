@@ -1,8 +1,4 @@
 <?php
-/**
- * Classe de validação centralizada
- * [RNF05] Implementa validações de entrada de forma segura
- */
 class Validator {
     protected $errors = [];
 

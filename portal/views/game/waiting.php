@@ -19,7 +19,7 @@
     async function startGame() {
         const token = "<?php echo $_SESSION['jwt_token']; ?>"; 
         
-        const response = await fetch('http://127.0.0.1:8000/api/game/<?php echo $game['id']; ?>/start', {
+        const response = await fetch('<?php echo API_BASE_URL; ?>/api/games/<?php echo $game['id']; ?>/start', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token }
         });

@@ -42,7 +42,7 @@ return [
         ],
 
         'api' => [
-            'driver' => 'jwt',    // <--- MUDANÇA AQUI (estava 'sanctum' ou 'token')
+            'driver' => 'jwt',
             'provider' => 'users',
         ],
     ],
@@ -70,10 +70,10 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+
+
+
+
     ],
 
     /*

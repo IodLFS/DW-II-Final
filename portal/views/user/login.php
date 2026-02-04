@@ -19,8 +19,22 @@
 
 <div class="card">
     <h2>Entrar</h2>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <div style="background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+            <?php echo htmlspecialchars($_SESSION['error']); ?>
+        </div>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['success'])): ?>
+        <div style="background-color: #d4edda; color: #155724; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+            <?php echo htmlspecialchars($_SESSION['success']); ?>
+        </div>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
     
-    <form action="<?php echo BASE_URL; ?>/user/authenticate" method="POST">
+    <form action="<?php echo BASE_URL; ?>/user/login" method="POST">
         <div class="form-group">
             <label>Email</label>
             <input type="email" name="email" required placeholder="O teu email">

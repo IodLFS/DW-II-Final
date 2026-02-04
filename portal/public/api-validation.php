@@ -1,8 +1,4 @@
 <?php
-/**
- * API AJAX para validação em tempo real
- * [RF03] Verificar disponibilidade de email/username sem submeter formulário
- */
 session_start();
 require_once 'config/config.php';
 require_once 'core/Database.php';

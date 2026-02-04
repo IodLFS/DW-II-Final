@@ -1,4 +1,3 @@
-// public/js/game.js
 
 async function fetchGameState() {
     try {
@@ -19,7 +18,6 @@ async function fetchGameState() {
     }
 }
 
-// NOVA FUNÇÃO: Envia a carta para a API
 async function playCard(cardCode) {
     try {
         const response = await fetch(`${API_URL}/game/${GAME_ID}/play`, {
@@ -32,7 +30,7 @@ async function playCard(cardCode) {
         });
 
         if (response.ok) {
-            fetchGameState(); // Atualiza a mesa imediatamente
+            fetchGameState(); 
         } else {
             const data = await response.json();
             alert("Erro: " + (data.error || "Não foi possível jogar"));
@@ -43,11 +41,9 @@ async function playCard(cardCode) {
 }
 
 function renderGame(data) {
-    // [RF33] VERIFICAÇÃO DE FIM DE JOGO
     if (data.status === 'finished') {
         const gameContainer = document.getElementById('game-table');
         
-        // Substitui todo o conteúdo da mesa pelo ecrã de vitória
         gameContainer.innerHTML = `
             <div style="text-align: center; color: white; padding-top: 100px;">
                 <h1 style="font-size: 50px;">FIM DE JOGO! 🏆</h1>
@@ -61,14 +57,9 @@ function renderGame(data) {
                 </button>
             </div>
         `;
-        return; // Pára a execução para não desenhar mais cartas
+        return; 
     }
 
-    // ... (O resto do código da função renderGame continua igual aqui para baixo) ...
-    // 1. Info e Pontos...
-    // 2. Trunfo...
-
-    // Desenha Minha Mão
     const handContainer = document.getElementById('my-hand');
     handContainer.innerHTML = ''; 
 
@@ -77,17 +68,13 @@ function renderGame(data) {
         card.className = `card ${isRed(cardCode) ? 'red' : 'black'}`;
         card.innerText = convertCardToSymbol(cardCode);
         
-        // Clicar chama a função real
         card.onclick = () => playCard(cardCode);
         
         handContainer.appendChild(card);
     });
     
-    // Mostra estado
     const statusMsg = document.getElementById('status-msg');
     if(statusMsg) {
-        // Assume que a variável PHP USER_ID não está disponível aqui diretamente, 
-        // mas podes inferir se a API retornar o teu ID ou apenas testar visualmente.
         statusMsg.innerText = "Turno do Jogador ID: " + data.current_turn;
     }
 }
@@ -105,7 +92,6 @@ function isRed(code) {
 }
 
 function showNotification(message, isError = true) {
-    // Cria o elemento se não existir
     let toast = document.getElementById('game-toast');
     if (!toast) {
         toast = document.createElement('div');
@@ -123,12 +109,10 @@ function showNotification(message, isError = true) {
         document.body.appendChild(toast);
     }
 
-    // Configura a mensagem
     toast.style.backgroundColor = isError ? 'rgba(255, 0, 0, 0.8)' : 'rgba(0, 128, 0, 0.8)';
     toast.innerText = message;
     toast.style.opacity = '1';
 
-    // Desaparece após 3 segundos
     setTimeout(() => {
         toast.style.opacity = '0';
     }, 3000);

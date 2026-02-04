@@ -25,7 +25,7 @@
     <form action="" method="POST" enctype="multipart/form-data">
         <div style="text-align: center;">
             <?php 
-                $avatar = $user['avatar'] ? BASE_URL . '/../uploads/' . $user['avatar'] : 'https://via.placeholder.com/100';
+                $avatar = $user['avatar'] ? BASE_URL . '/../uploads/' . $user['avatar'] : 'https:
             ?>
             <img src="<?php echo $avatar; ?>" class="avatar-preview" alt="Avatar">
             <br>

@@ -38,7 +38,7 @@
                         </td>
                         <td>
                             <?php 
-                                // Exemplo simples de lógica de vencedor
+
                                 if ($game['score_team_a'] > $game['score_team_b']) echo "Equipa A (Pares)";
                                 elseif ($game['score_team_b'] > $game['score_team_a']) echo "Equipa B (Ímpares)";
                                 else echo "Empate";

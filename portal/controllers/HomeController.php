@@ -1,7 +1,13 @@
 <?php
 class HomeController extends Controller {
     public function index() {
-        $this->view('home', ['titulo' => 'Bem-vindo à Sueca Online']);
+
+        $dados = [
+            'titulo' => 'Bem-vindo à Sueca Online'
+        ];
+
+
+        $this->view('home', $dados);
     }
 }
 

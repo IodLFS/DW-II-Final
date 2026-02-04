@@ -67,7 +67,7 @@ class Game {
         return false;
     }
 
-    // [RF13] Obter histórico de jogos terminados do utilizador
+
     public function getHistory($userId) {
         $sql = "SELECT g.*, 
                 (SELECT COUNT(*) FROM game_players WHERE game_id = g.id) as total_players
