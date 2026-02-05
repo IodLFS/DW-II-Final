@@ -65,7 +65,7 @@
         <?php endfor; ?>
     </div>
 
-    <?php if ($game['creator_id'] == $user_id): ?>
+    <?php if ($game['owner_id'] == $user_id): ?>
         <br>
         <?php if (count($players) == 4): ?>
             <a href="#" class="btn-start">Iniciar Jogo!</a>
