@@ -37,7 +37,7 @@ class Game {
     }
 
     public function getPlayers($gameId) {
-        $sql = "SELECT u.username, u.avatar, gp.seat_index 
+        $sql = "SELECT u.username, gp.seat_index 
                 FROM game_players gp
                 JOIN users u ON gp.user_id = u.id
                 WHERE gp.game_id = :game_id
