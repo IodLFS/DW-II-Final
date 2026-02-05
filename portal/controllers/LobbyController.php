@@ -13,7 +13,7 @@ class LobbyController extends Controller {
         $rooms = $gameModel->getAllWaiting();
 
         $this->view('lobby', [
-            'user_name' => $_SESSION['user_name'],
+            'user_name' => $_SESSION['username'],
             'rooms' => $rooms
         ]);
     }
