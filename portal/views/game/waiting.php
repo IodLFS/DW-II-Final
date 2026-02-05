@@ -44,7 +44,7 @@
 <body>
 
 <div class="container">
-    <h1>Sala: <?php echo htmlspecialchars($game['name']); ?></h1>
+    <h1>Sala: <?php echo htmlspecialchars($game['code'] ?? 'Sem código'); ?></h1>
     <p>A aguardar jogadores... (<?php echo count($players); ?>/4)</p>
 
     <div class="player-list">
