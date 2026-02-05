@@ -68,8 +68,8 @@
                 <?php if (count($rooms) > 0): ?>
                     <?php foreach($rooms as $room): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($room['name']); ?></td>
-                            <td><?php echo htmlspecialchars($room['creator_name']); ?></td>
+                            <td><?php echo htmlspecialchars($room['code'] ?? 'Sem nome'); ?></td>
+                            <td><?php echo htmlspecialchars($room['creator_name'] ?? 'Desconhecido'); ?></td>
                             <td><?php echo $room['player_count']; ?>/4</td>
                             <td>
                                 <?php if($room['player_count'] < 4): ?>
