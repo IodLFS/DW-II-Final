@@ -9,16 +9,17 @@ class Game {
     }
 
     public function create($name, $creatorId) {
-        $sql = "INSERT INTO games (name, creator_id, status, created_at) VALUES (:name, :creator_id, 'waiting', NOW())";
+        $sql = "INSERT INTO games (code, owner_id, status, created_at) VALUES (:code, :owner_id, 'waiting', NOW())";
         $stmt = $this->db->prepare($sql);
-        if ($stmt->execute(['name' => $name, 'creator_id' => $creatorId])) {
+        $code = substr(md5(uniqid()), 0, 6);
+        if ($stmt->execute(['code' => $code, 'owner_id' => $creatorId])) {
             return $this->db->lastInsertId();
         }
         return false;
     }
 
     public function getAllWaiting() {
-        $sql = "SELECT g.*, u.username as creator_name, (SELECT COUNT(*) FROM game_players gp WHERE gp.game_id = g.id) as player_count FROM games g JOIN users u ON g.creator_id = u.id WHERE g.status = 'waiting' ORDER BY g.created_at DESC";
+        $sql = "SELECT g.*, u.username as creator_name, (SELECT COUNT(*) FROM game_players gp WHERE gp.game_id = g.id) as player_count FROM games g JOIN users u ON g.owner_id = u.id WHERE g.status = 'waiting' ORDER BY g.created_at DESC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll();
     }
